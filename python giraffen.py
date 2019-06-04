@@ -1,7 +1,7 @@
 
 import random
 
-class Giraffe():
+class Giroffe():
     def __init__(self):
 
 
@@ -24,45 +24,45 @@ class Giraffe():
         
 
 
-class GiraffeGroup():
+class GiroffeGroup():
     def __init__(self):
 
-        self.giraffes = []
+        self.giroffes = []
 
         for i in range(20):
-            self.spawnGiraffe()
+            self.spawnGiroffe()
         
 
     def reproduce(self):
 
 
-        for giraffe in self.giraffes:
+        for giroffe in self.giroffes:
 
-            giraffe.grow()
-            giraffe.birthday()
+            giroffe.grow()
+            giroffe.birthday()
 
 
-        for i in range (0, len(self.giraffe)/2, 2):
+        for i in range (0, len(self.giroffe)/2, 2):
             try:
-                self.spawnGiraffe([self.giraffes[i],self.giraffes[i+1]])
+                self.spawnGiroffe([self.giroffes[i],self.giroffes[i+1]])
             except
                 print("somefuckingerror")
             
         
-    def spawnGiraffe(self, parents=False):
+    def spawnGiroffe(self, parents=False):
 
         
-        giraffe = Giraffe()
+        giroffe = Giroffe()
         if parents:
-            giraffe.neckLength = (parent[0].neckLength + parent[1].neckLength)/2 + random.randin(-10,10)
+            giroffe.neckLength = (parent[0].neckLength + parent[1].neckLength)/2 + random.randin(-10,10)
             
-        self.giraffes.append(giraffe)
+        self.giroffes.append(giroffe)
 
                 
 
 def main():
 
-    bob = GiraffeGroup()
+    bob = GiroffeGroup()
 
     years = 0
 
