@@ -12,8 +12,7 @@ De user kan met knopjes de boel beïnvloeden, waarna er observaties gemaakt kunn
 Voor elke 2 giraffes komen er elke "tijdseenheid" (nu minuut) 2 tot 5 nieuwe giraffen bij. De oudere generatie verdwijnt. (en de nieuew generatie zijn nog in "baby" fase? misschien een leeftijd systeem (bar), 0-6 ofzo waar ze van 2-4 kunnen voortplanten)
 
 giraffen  verliezen 1 honger per minuut 
-  - ja dit kan dus niet moet iets van 1 per 10 seconden zijn anders gaan ze sws dood
-                                         voordat ze van de honger kunnen sterven
+
 giraffen kunnen alleen eten als hun neklengte binnen het bereik van de boom is
 
 bomen gaan niet op
