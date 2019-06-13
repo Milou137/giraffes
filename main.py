@@ -41,6 +41,9 @@ def main():
                 giraffe = giraffes[g_index]
                 giraffe.drain_hunger()
                 giraffe.eat(tree_length)
+            dead_giraffes = [giraffe for giraffe in giraffes if giraffe.isDead()]
+            for corpse in dead_giraffes:
+                giraffes.remove(corpse)
         input("press enter to go to the next generation")
         print("there are",len(giraffes),"in generation",generation)
         generation += 1
