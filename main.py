@@ -8,6 +8,7 @@ class Giraffe():
 
         self.neck_length = neck_length
         self.hunger = MAX_HUNGER
+        self.dead = False
     def eat(self, tree_length):
         if ((self.neck_length - tree_length) > -EAT_RANGE) and (
             (self.neck_length - tree_length) < EAT_RANGE):
@@ -17,6 +18,8 @@ class Giraffe():
                 return True
         else:
             return False
+    def isDead(self):
+        return self.dead
 def main():
     giraffes = []
     for i in range(3):
