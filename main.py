@@ -24,4 +24,16 @@ def main():
     giraffes = []
     for i in range(3):
         giraffes.append(Giraffe())
+    Game = True
+    generation = 0
+    while Game:
+        input("press enter to go to the next generation")
+        print("there are",len(giraffes),"in generation",generation)
+        generation += 1
+        new_gen = []
+        for giraffe in giraffes:
+            new_giraffe = Giraffe( giraffe.neck_length + randint(-3,3))
+            new_gen.append(new_giraffe)
+
+        giraffes = new_gen
 main()
