@@ -1,3 +1,5 @@
+# imports
+from random import randint
 EAT_RANGE = 10
 MAX_HUNGER = 5
 DEFAULT_NECK_LENGTH = 100
