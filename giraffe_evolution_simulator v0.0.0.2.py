@@ -200,8 +200,10 @@ def highest_frequency(l):
     return "Most occuring item was %s with a frequency of %s " %(item,highest)
         
 
+TREEDOWN = - 3
+TREEUP = 15
 
-
+visualise = False
 verbose = False
 
 total_spawned = 0
@@ -210,6 +212,7 @@ all_gen_neck_length_counts = dict()
 all_lengths = []
 all_shortest_lengths=  []
 all_tallest_lengths = []
+all_treelengths = []
 axvlineXes = []
 SHORTEST_NECK = DEFAULT_NECK_LENGTH
 TALLEST_NECK = DEFAULT_NECK_LENGTH
@@ -242,7 +245,8 @@ while len(giraffes) > 0:
     # game loop
     for hunger_drain in range(HUNGER_DRAIN_TICKS):
         # draw background
-        surface.blit(background,(0,0))
+        if visualise:
+            surface.blit(background,(0,0))
         for g_index in range(len(giraffes)):
 
             giraffe = giraffes[g_index]
@@ -250,9 +254,12 @@ while len(giraffes) > 0:
             
             
             giraffe.eat(tree_length)
-            giraffe.walk()
-            giraffe.draw() 
-            win.update()
+
+            if visualise:
+                giraffe.walk()
+                giraffe.draw() 
+                win.update()
+                clock.tick(FPS)
             
          
         dead_giraffes = [giraffe for giraffe in giraffes if giraffe.isDead()]
@@ -261,7 +268,8 @@ while len(giraffes) > 0:
             giraffes.remove(corpse)
 
         
-        clock.tick(FPS)
+        
+        
 
 
     # some logging for now
@@ -280,7 +288,9 @@ while len(giraffes) > 0:
     for l in neck_lengths:
         all_shortest_lengths.append(short_one)
         all_tallest_lengths.append(tall_one)
-
+        all_treelengths.append(tree_length)
+        
+    tree_length += randint(TREEDOWN, TREEUP)
     axvlineXes.append(total_spawned-total_died)
     
     print("SHORT:",SHORTEST_NECK,"TALL:",TALLEST_NECK)
@@ -337,6 +347,7 @@ mean =  np.mean(all_lengths)
 plt.plot(all_lengths, 'r--')
 plt.plot(all_shortest_lengths, 'bs')
 plt.plot(all_tallest_lengths, 'g^')
+plt.plot(all_treelengths, 'brown')
 for tup in zip([average, mean], ['black','grey']):
     print(tup[0], tup[1])
     plt.hlines(tup[0],0,len(all_lengths), tup[1])
@@ -344,4 +355,5 @@ for tup in zip([average, mean], ['black','grey']):
 for axvline in  axvlineXes:
     plt.axvline(axvline, color='pink')
     
+plt.style.use('fivethirtyeight')
 plt.show()
