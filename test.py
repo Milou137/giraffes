@@ -7,10 +7,10 @@ pygame.init()
 
 white = (255,255,255)
 
-x = 1280
+x = 1500
 y = 1024
 z = [x,y]
-
+FACTOR = 7 #int
 FPS = 30
 GLOB_STEPSIZE = 0.6
 clock = pygame.time.Clock()
@@ -19,11 +19,8 @@ EASTER_EGG1 = True
 win = pygame.display
 
 win.set_caption("My pygame window meme")
-
 surface = win.set_mode(z)
-giraffe_1_img = pygame.transform.scale(pygame.image.load('images/giraffe_1.png'), (2000,2000))
-background = pygame.transform.scale(pygame.image.load('images/background.png'), (1280, 1024))
-boom = pygame.image.load('images/boom_0.png')
+background = pygame.transform.scale(pygame.image.load('images/background.png'), (z))
 window = True
 
 
@@ -54,8 +51,14 @@ class Memes():
 class Meme():
     def __init__(self):
         self.x = 0
-        self.y = randint(550, 580)
-        self.image = pygame.transform.scale(pygame.image.load('images/giraffe_1.png'), (200,200))
+        self.image = pygame.image.load('images/giraffe_10.png')
+        size = self.image.get_size()
+        width, length = size[0],size[1]
+        new_w, new_l = width*FACTOR, length*FACTOR
+        self.y = 1020 - new_l       
+        self.image = pygame.transform.scale(self.image, (new_w, new_l))
+        
+                                            
 
     def getpos(self):
         return self.x, self.y
@@ -86,10 +89,26 @@ class Meme():
     def draw(self):
         surface.blit(self.image,(self.x,self.y))
 
+class Boom():
+    def __init__(self, offset=0):
+        self.image = pygame.image.load('images/boom_0.png')
+        size = self.image.get_size()
+        width, length = size[0],size[1]
+        new_w, new_l = width*FACTOR, length*FACTOR
+        self.x = (x/2) - (new_w/2) + offset
+              
+        
+        self.y = 1020 - new_l
+        self.image = pygame.transform.scale(self.image, (new_w, new_l))
 
+    def draw(self):
+        surface.blit(self.image,(self.x,self.y))
+        
 
 m = Memes()
 
+bob = Boom(420)
+job = Boom(-350)
 
 while window:
     for event in pygame.event.get():
@@ -104,7 +123,8 @@ while window:
     
     m.walkAll()
     m.drawAll()
-
+    bob.draw()
+    job.draw()
 
     # update (render) the screen (?)
     win.update()

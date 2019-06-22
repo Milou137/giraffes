@@ -130,7 +130,7 @@ while window:
 
 
     # update (render) the screen (?)
-    surface.update()
+    win.update()
 
     # fps
     clock.tick(FPS)
