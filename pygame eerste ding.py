@@ -16,7 +16,7 @@ FPS = 30
 GLOB_STEPSIZE = 0.6
 clock = pygame.time.Clock()
 
-EASTER_EGG1 = True
+EASTER_EGG1 = False
 win = pygame.display
 
 win.set_caption("My pygame window meme")
@@ -47,7 +47,7 @@ class Memes():
 
     def makeMemes(self):
 
-        for i in range(12):
+        for i in range(30):
             self.memes.append(Meme())
 
     def growSome(self):
@@ -94,11 +94,13 @@ class Meme():
         surface.blit(self.image,(self.x,self.y))
 
     def grow(self, amt):
-        if self.image.get_size()[1] < 250:
-            size = self.image.get_size()
+        size = self.image.get_size()
+        if size[1] < 780:
             width, length = size[0], size[1]
+
+            
             if not EASTER_EGG1:
-                self.image = pygame.transform.scale(self.image,(width,length+amt))
+                self.image = pygame.transform.scale(pygame.image.load('images/running_giraffe_small_deprecatred.png').convert_alpha(), (width, length+amt))
                 self.y -= amt
             else:
                 self.image = pygame.transform.rotozoom(self.image, randint(0,360),1)
@@ -118,6 +120,7 @@ while window:
 
     # draw background first
     surface.blit(background,(0,0))
+    #surface.fill([0,0,0])
 
     # render stuff
     
@@ -127,7 +130,7 @@ while window:
 
 
     # update (render) the screen (?)
-    win.update()
+    surface.update()
 
     # fps
     clock.tick(FPS)
