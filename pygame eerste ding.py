@@ -12,17 +12,22 @@ x = 600
 y = 800
 z = [x,y]
 
+FPS = 30
+GLOB_STEPSIZE = 0.6
+clock = pygame.time.Clock()
 
-
-
+EASTER_EGG1 = True
 win = pygame.display
 
 win.set_caption("My pygame window meme")
 
 surface = win.set_mode(z)
-giraffe_1_img = pygame.image.load('images/giraffe_1.png')
+giraffe_1_img = pygame.transform.scale(pygame.image.load('images/running_giraffe.png').convert_alpha(), (100, 100))
+background = pygame.image.load('images/giraffe-herd-in-savannah.png')
 window = True
 
+
+# testing sprites
 
 class Memes():
     def __init__(self):
@@ -44,12 +49,20 @@ class Memes():
 
         for i in range(12):
             self.memes.append(Meme())
+
+    def growSome(self):
+
+        for meme in self.memes:
+
+            # random
+            if bool(randint(0,1)):
+                meme.grow(randint(-5,10))
             
 class Meme():
     def __init__(self):
-        self.x = 200
-        self.y = 600
-        self.draw()
+        self.x = 0
+        self.y = randint(550, 580)
+        self.image = pygame.transform.scale(pygame.image.load('images/running_giraffe.png').convert_alpha(), (100, 100))
 
     def getpos(self):
         return self.x, self.y
@@ -62,9 +75,9 @@ class Meme():
         
         for i in range(distance):
             if not negative:
-                self.x += 0.2
+                self.x += GLOB_STEPSIZE
             else:
-                self.x -= 0.2
+                self.x -= GLOB_STEPSIZE
             #self.y = self.y + randint(-5, 5)
             # reset if giraffe out of boundaries 
             if self.x < 0:
@@ -72,15 +85,30 @@ class Meme():
             if self.x > x:
                 self.x = (x/3)
             if self.y < 0:
-                self.y = 1
+                self.y = 15
             if self.y > y:
                 self.y = (y/2)
 
 
     def draw(self):
-        surface.blit(giraffe_1_img,(self.x,self.y))
+        surface.blit(self.image,(self.x,self.y))
+
+    def grow(self, amt):
+        if self.image.get_size()[1] < 250:
+            size = self.image.get_size()
+            width, length = size[0], size[1]
+            if not EASTER_EGG1:
+                self.image = pygame.transform.scale(self.image,(width,length+amt))
+                self.y -= amt
+            else:
+                self.image = pygame.transform.rotozoom(self.image, randint(0,360),1)
+
+
+
+
 
 m = Memes()
+
 
 while window:
     for event in pygame.event.get():
@@ -88,11 +116,21 @@ while window:
             window = False
 
 
+    # draw background first
+    surface.blit(background,(0,0))
+
+    # render stuff
     
     m.walkAll()
     m.drawAll()
+    m.growSome()
+
+
+    # update (render) the screen (?)
     win.update()
-    surface.fill(white)
+
+    # fps
+    clock.tick(FPS)
 
 
 pygame.quit()
