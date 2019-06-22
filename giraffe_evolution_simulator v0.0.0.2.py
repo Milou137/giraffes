@@ -34,7 +34,7 @@ style.use("fivethirtyeight")
 
 # Giraffes
 EAT_RANGE = 75
-MAX_HUNGER = 10000
+MAX_HUNGER = 5
 HUNGER_DRAIN_TICKS = 5
 DEFAULT_NECK_LENGTH = 1000
 
@@ -45,11 +45,11 @@ pygame.init()
 white = (255,255,255)
 
 x = 800
-y = 600
+y = 630
 z = [x,y]
 
 FACTOR = 5 #int
-FPS = 20
+FPS = 100
 GLOB_STEPSIZE = 5
 clock = pygame.time.Clock()
 PIXELS_ONDERGROND = 40
@@ -68,9 +68,9 @@ window = True
 DEFAULT_TREE_LENGTH = 1000
 
 # Population
-DEFAULT_GIRAFFE_START_AMOUNT = 25
-DEFAULT_MAX_ALLOWED_GIRAFFES = 30
-DEFAULT_CHANCE_SPAWN_NEW_GIRAFFE = 25 # 1/33
+DEFAULT_GIRAFFE_START_AMOUNT = 5
+DEFAULT_MAX_ALLOWED_GIRAFFES = 10
+DEFAULT_CHANCE_SPAWN_NEW_GIRAFFE = 50 # 1/33
 DEFAULT_MUTATION_AMOUNT = 5
 
 
@@ -90,7 +90,7 @@ class Giraffe():
 
     def __init__(self, neck_length = DEFAULT_NECK_LENGTH, image=0):
 
-        self.x = 0
+        self.x = randint(0+10, x-10)
         imagepath = "images/giraffe_"+str(image)+".png" # > 0 < MAXRANGE
         self.image = pygame.image.load(imagepath).convert_alpha()
         self.neck_length = randint(neck_length-EAT_RANGE,
@@ -117,7 +117,7 @@ class Giraffe():
     def drain_hunger(self):
         self.hunger -= 1
 
-        if self.hunger == 0:
+        if self.hunger <= 0:
             self.dead = True
             #redundancy
 
@@ -142,20 +142,18 @@ class Giraffe():
         
         for i in range(distance):
             if not negative:
-                self.x += GLOB_STEPSIZE
+                self.x += 3
             else:
-                self.x -= GLOB_STEPSIZE
+                self.x -= 3
             #self.y = self.y + randint(-5, 5)
             # reset if giraffe out of boundaries 
             if self.x < 0:
-                self.x = 1
+                self.x = x/2
             if self.x > x:
-                self.x = (x/3)
+                self.x = x/3
             if self.y < 0:
                 self.y = 15
             if self.y > y:
-                self.y = (y/2)
-
                 self.y = y/2
 
 """
@@ -252,7 +250,6 @@ def highest_frequency(l):
     # sorted_x = sorted(x.items(), key=lambda kv: kv[1]) <- for later
     # if we want to return like a top-3 or something. h.
     return "Most occuring item was %s with a frequency of %s " %(item,highest)
-        
 
 """
 ██████╗ ██╗   ██╗████████╗████████╗ ██████╗ ███╗   ██╗
@@ -297,7 +294,7 @@ downButton = button((255,0,0), 150, 20,50, 50,  '-')
 buttons = [upButton, downButton]       
 
 TREEDOWN = - 3
-TREEUP = 15
+TREEUP = 30
 
 visualise = True
 verbose = False
@@ -319,7 +316,11 @@ MAX_ALLOWED_GIRAFFES= DEFAULT_MAX_ALLOWED_GIRAFFES
 
 giraffes = []
 for i in range(DEFAULT_GIRAFFE_START_AMOUNT):
-    giraffes.append(Giraffe())
+    giraffeboy = Giraffe()
+    giraffeboy.draw()
+    giraffes.append(giraffeboy)
+    print(giraffeboy.x, giraffeboy.y)
+    
     total_spawned += 1
 
 
@@ -345,40 +346,73 @@ job = Boom(-350)
 print("GAME STARTS!","there are", len(giraffes))
 while len(giraffes) > 0:
     for event in pygame.event.get():
+        pos = pygame.mouse.get_pos()
         if event.type == pygame.QUIT:
             window = False
 
+
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            if upButton.isOver(pos):
+                tree_length += 50
+
+            if downButton.isOver(pos):
+                tree_length -= 50
+            
     
 
-    # game loop
-    for hunger_drain in range(HUNGER_DRAIN_TICKS):
-        # draw background
+#  ██████╗  █████╗ ███╗   ███╗███████╗    ██╗      ██████╗  ██████╗ ██████╗ 
+# ██╔════╝ ██╔══██╗████╗ ████║██╔════╝    ██║     ██╔═══██╗██╔═══██╗██╔══██╗
+# ██║  ███╗███████║██╔████╔██║█████╗      ██║     ██║   ██║██║   ██║██████╔╝
+# ██║   ██║██╔══██║██║╚██╔╝██║██╔══╝      ██║     ██║   ██║██║   ██║██╔═══╝ 
+# ╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗    ███████╗╚██████╔╝╚██████╔╝██║     
+#  ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝    ╚══════╝ ╚═════╝  ╚═════╝ ╚═╝     
+# ----------------------------------------------------------------------------
+# one full 'loop' equals one 'generation'
+# every generation, an inner loop represents time (hunger drains every so often)
+#
+#
+#
+    for time_unit in range(60):
+
+        # background first
         if visualise:
             surface.blit(background,(0,0))
-        for g_index in range(len(giraffes)):
 
-            giraffe = giraffes[g_index]
-            giraffe.drain_hunger()
-            
-            
-            giraffe.eat(tree_length)
-
-            if visualise:
+        # eat every 10 ticks
+        if time_unit % 10 == 0:
+            for g_index in range(len(giraffes)):
+                giraffe = giraffes[g_index]
+                giraffe.drain_hunger()
+                giraffe.eat(tree_length)
+            dead_giraffes = [giraffe for giraffe in giraffes if giraffe.isDead()]
+            for corpse in dead_giraffes:
+                total_died += 1
+                giraffes.remove(corpse)
+        else:
+            for g_index in range(len(giraffes)):
+                giraffe = giraffes[g_index]
                 giraffe.walk()
                 giraffe.draw()
-                bob.draw()
-                job.draw()
-                win.update()
-                clock.tick(FPS)
-            
-         
-        dead_giraffes = [giraffe for giraffe in giraffes if giraffe.isDead()]
-        for corpse in dead_giraffes:
-            total_died += 1
-            giraffes.remove(corpse)
 
-        
-        
+        # draw background (if visualise is on)
+        if visualise:
+            
+                      
+            # foreground (trees)
+            bob.draw()
+            job.draw()
+
+
+            # draw GUI elements (buttons)
+            upButton.draw(surface)
+            downButton.draw(surface)
+            # actually update the window
+            # and show the new frame
+            win.update()  
+
+                
+            # tick the clock keep frames <= FPS
+            clock.tick(FPS)
         
 
 
@@ -399,11 +433,12 @@ while len(giraffes) > 0:
         all_shortest_lengths.append(short_one)
         all_tallest_lengths.append(tall_one)
         all_treelengths.append(tree_length)
-        
-    tree_length += randint(TREEDOWN, TREEUP)
+
+    # random treelength   
+    #tree_length += randint(TREEDOWN, TREEUP)
     axvlineXes.append(total_spawned-total_died)
     
-    print("SHORT:",SHORTEST_NECK,"TALL:",TALLEST_NECK)
+    print("SHORT:",SHORTEST_NECK,"TALL:",TALLEST_NECK,"TREE:",tree_length)
     current_gen_neck_length_counts = {neck_length:neck_lengths.count(neck_length) for
               neck_length in set(neck_lengths)}
     add_to_dict(all_gen_neck_length_counts,
@@ -445,6 +480,17 @@ surface.blit(background,(0,0))
 '╚══════╝╚═╝  ╚═══╝╚═════╝  ' #  ╚══════╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚══════╝╚═╝  ╚═══╝
                                                                                 
 
+# end state ( diagrams, popuptext, idfk)
+# from https://stackoverflow.com/questions/20842801/how-to-display-text-in-pygame
+pygame.font.init()
+myfont =  pygame.font.SysFont('Comic Sans MS', 30)
+game_end_text_1 = myfont.render('Endu Of Gamu', False, (0, 0, 0))
+game_end_text_2 = myfont.render('generation: '+str(generation), False, (0, 0, 0))
+
+surface.blit(background,(0,0))
+surface.blit(game_end_text_1,((x/2)-60,y/2))
+surface.blit(game_end_text_2,((x/2)-60,y/2+30))
+win.update()
 
 # end whileloop
 print("In generation",generation,"all giraffes are dead")
