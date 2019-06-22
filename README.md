@@ -3,7 +3,7 @@ base of a game
 
 # game loop
 ### start
-Een aantal giraffen spawnen met een hungerbar van 
+Een aantal giraffen spawnen met een hungerbar 
 ### user
 de user kan de boomlengte vergroten en verkleinen
 
