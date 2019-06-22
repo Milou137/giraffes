@@ -29,14 +29,15 @@ pygame.init()
 
 white = (255,255,255)
 
-x = 1500
-y = 1024
+x = 800
+y = 600
 z = [x,y]
 
 FACTOR = 5 #int
 FPS = 30
 GLOB_STEPSIZE = 5
 clock = pygame.time.Clock()
+PIXELS_ONDERGROND = 300
 
 EASTER_EGG1 = False
 win = pygame.display
@@ -52,8 +53,8 @@ window = True
 DEFAULT_TREE_LENGTH = 1000
 
 # Population
-DEFAULT_GIRAFFE_START_AMOUNT = 100
-DEFAULT_MAX_ALLOWED_GIRAFFES = 500
+DEFAULT_GIRAFFE_START_AMOUNT = 2
+DEFAULT_MAX_ALLOWED_GIRAFFES = 5
 DEFAULT_CHANCE_SPAWN_NEW_GIRAFFE = 25 # 1/33
 DEFAULT_MUTATION_AMOUNT = 5
 
@@ -70,7 +71,7 @@ class Giraffe():
         size = self.image.get_size()
         width, length = size[0],size[1]
         new_w, new_l = width*FACTOR, length*FACTOR
-        self.y = 1020 - new_l       
+        self.y = y - new_l - PIXELS_ONDERGROND     
         self.image = pygame.transform.scale(self.image, (new_w, new_l))
              
         self.hunger = MAX_HUNGER
@@ -109,7 +110,7 @@ class Giraffe():
     def walk(self):
 
            
-        distance = randint(0, 20)
+        distance = randint(0, 100)
         negative = bool(randint(0,1))
         
         for i in range(distance):
@@ -137,7 +138,7 @@ class Boom():
         self.x = (x/2) - (new_w/2) + offset
               
         
-        self.y = 1020 - new_l
+        self.y = y - new_l - PIXELS_ONDERGROND
         self.image = pygame.transform.scale(self.image, (new_w, new_l))
 
     def draw(self):
@@ -220,7 +221,7 @@ def highest_frequency(l):
 TREEDOWN = - 3
 TREEUP = 15
 
-visualise = False
+visualise = True
 verbose = False
 
 total_spawned = 0
@@ -276,7 +277,9 @@ while len(giraffes) > 0:
 
             if visualise:
                 giraffe.walk()
-                giraffe.draw() 
+                giraffe.draw()
+                bob.draw()
+                job.draw()
                 win.update()
                 clock.tick(FPS)
             
