@@ -49,7 +49,7 @@ y = 630
 z = [x,y]
 
 FACTOR = 5 #int
-FPS = 100
+FPS = 25
 GLOB_STEPSIZE = 5
 clock = pygame.time.Clock()
 PIXELS_ONDERGROND = 40
@@ -68,10 +68,38 @@ window = True
 DEFAULT_TREE_LENGTH = 1000
 tree_length = DEFAULT_TREE_LENGTH
 # Population
-DEFAULT_GIRAFFE_START_AMOUNT = 5
-DEFAULT_MAX_ALLOWED_GIRAFFES = 10
+DEFAULT_GIRAFFE_START_AMOUNT = 10
+DEFAULT_MAX_ALLOWED_GIRAFFES = 100
 DEFAULT_CHANCE_SPAWN_NEW_GIRAFFE = 50 # 1/33
 DEFAULT_MUTATION_AMOUNT = 5
+
+TREEDOWN = - 3
+TREEUP = 30
+
+visualise = True
+verbose = False
+
+total_spawned = 0
+total_died = 0
+all_gen_neck_length_counts = dict()
+all_lengths = []
+all_shortest_lengths =  []
+all_tallest_lengths = []
+all_treelengths = [1000]
+axvlineXes = []
+SHORTEST_NECK = DEFAULT_NECK_LENGTH
+TALLEST_NECK = DEFAULT_NECK_LENGTH
+MAX_DECREASE = DEFAULT_MUTATION_AMOUNT
+MAX_INCREASE  = DEFAULT_MUTATION_AMOUNT
+CHANCE_SPAWN_NEW_GIRAFFE = DEFAULT_CHANCE_SPAWN_NEW_GIRAFFE
+MAX_ALLOWED_GIRAFFES= DEFAULT_MAX_ALLOWED_GIRAFFES
+
+
+Game = True
+generation = 0
+population_size_per_generation = []
+
+tree_length = DEFAULT_TREE_LENGTH # DO THIS FOR EVERYTHING
 
 
 
@@ -88,7 +116,7 @@ DEFAULT_MUTATION_AMOUNT = 5
 
 class Giraffe():
 
-    def __init__(self, neck_length = DEFAULT_NECK_LENGTH, image=0):
+    def __init__(self, neck_length = DEFAULT_NECK_LENGTH, image=4):
 
         self.x = randint(0+10, x-10)
         imagepath = "images/giraffe_"+str(image)+".png" # > 0 < MAXRANGE
@@ -166,8 +194,9 @@ class Giraffe():
 class Boom():
     def __init__(self, offset=0, minBOOM=tree_length/2,maxBOOM=tree_length*2):
 
-        global tree_length
-        boom_image_num = normalise([minBOOM, new_length, maxBOOM],10)[1]
+        if offset == 0:
+            offset = randint (0+10, x-10)
+        boom_image_num = normalise([500, tree_length, 2000],10)[1]
         imagepath = "images/boom_"+str(boom_image_num)+".png" # > 0 < MAXRANGE
         self.image = pygame.image.load(imagepath).convert_alpha()
         size = self.image.get_size()
@@ -179,14 +208,70 @@ class Boom():
 
     def draw(self):
         surface.blit(self.image,(self.x,self.y))
+
+    def update(self, tree_items):
+        """ tree min, max, length"""
+        image_num = normalise([500,tree_items[1],2000],10)[1]
+        imagepath = "images/boom_"+str(image_num)+".png" # > 0 < MAXRANGE
+        self.image = pygame.image.load(imagepath).convert_alpha()
+        size = self.image.get_size()
+        width, length = size[0],size[1]
+        new_w, new_l = width*FACTOR, length*FACTOR
+        self.x = (x/2) - (new_w/2)
+        self.y = y - new_l - PIXELS_ONDERGROND
+        self.image = pygame.transform.scale(self.image, (new_w, new_l))
+        
+"""
+██████╗ ██╗   ██╗████████╗████████╗ ██████╗ ███╗   ██╗
+██╔══██╗██║   ██║╚══██╔══╝╚══██╔══╝██╔═══██╗████╗  ██║
+██████╔╝██║   ██║   ██║      ██║   ██║   ██║██╔██╗ ██║
+██╔══██╗██║   ██║   ██║      ██║   ██║   ██║██║╚██╗██║
+██████╔╝╚██████╔╝   ██║      ██║   ╚██████╔╝██║ ╚████║
+╚═════╝  ╚═════╝    ╚═╝      ╚═╝    ╚═════╝ ╚═╝  ╚═══╝
+                                                      """
+class button():
+    def __init__(self, color, x, y, width, height, text=''):
+        self.color = color
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.text = text
+
+    def draw(self, win, outline=None):
+        # Call this method to draw the button on the screen
+        if outline:
+            pygame.draw.rect(win, outline, (self.x - 2, self.y - 2, self.width + 4, self.height + 4), 0)
+
+        pygame.draw.rect(win, self.color, (self.x, self.y, self.width, self.height), 0)
+
+        if self.text != '':
+            font = pygame.font.SysFont('comicsans', 60)
+            text = font.render(self.text, 1, (0, 0, 0))
+            win.blit(text, (
+            self.x + (self.width / 2 - text.get_width() / 2), self.y + (self.height / 2 - text.get_height() / 2)))
+
+    def isOver(self, pos):
+        # Pos is the mouse position or a tuple of (x,y) coordinates
+        if pos[0] > self.x and pos[0] < self.x + self.width:
+            if pos[1] > self.y and pos[1] < self.y + self.height:
+                return True
+
+        return False       
     
 def normalise(l, r):
     # how many times does the smallest thing fit all the other things?
     minim, maxim = min(l), max(l)
     result = []
 
+    if minim == maxim:
+        minim -= 1
+        maxim += 1
+        
     devider = maxim-minim
 
+    
+        
     for i in l:
         result.append( round(((i - minim)/(devider))*r))
 
@@ -251,88 +336,42 @@ def highest_frequency(l):
     # if we want to return like a top-3 or something. h.
     return "Most occuring item was %s with a frequency of %s " %(item,highest)
 
-"""
-██████╗ ██╗   ██╗████████╗████████╗ ██████╗ ███╗   ██╗
-██╔══██╗██║   ██║╚══██╔══╝╚══██╔══╝██╔═══██╗████╗  ██║
-██████╔╝██║   ██║   ██║      ██║   ██║   ██║██╔██╗ ██║
-██╔══██╗██║   ██║   ██║      ██║   ██║   ██║██║╚██╗██║
-██████╔╝╚██████╔╝   ██║      ██║   ╚██████╔╝██║ ╚████║
-╚═════╝  ╚═════╝    ╚═╝      ╚═╝    ╚═════╝ ╚═╝  ╚═══╝
-                                                      """
-class button():
-    def __init__(self, color, x, y, width, height, text=''):
-        self.color = color
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-        self.text = text
 
-    def draw(self, win, outline=None):
-        # Call this method to draw the button on the screen
-        if outline:
-            pygame.draw.rect(win, outline, (self.x - 2, self.y - 2, self.width + 4, self.height + 4), 0)
+#
+# instanciating some objects
+# --------------------------
 
-        pygame.draw.rect(win, self.color, (self.x, self.y, self.width, self.height), 0)
 
-        if self.text != '':
-            font = pygame.font.SysFont('comicsans', 60)
-            text = font.render(self.text, 1, (0, 0, 0))
-            win.blit(text, (
-            self.x + (self.width / 2 - text.get_width() / 2), self.y + (self.height / 2 - text.get_height() / 2)))
+# demo trees
+bob = Boom(420)
+job = Boom(-350)
 
-    def isOver(self, pos):
-        # Pos is the mouse position or a tuple of (x,y) coordinates
-        if pos[0] > self.x and pos[0] < self.x + self.width:
-            if pos[1] > self.y and pos[1] < self.y + self.height:
-                return True
+# background trees
+back_trees = []
+for i in range(6):
+    tree = Boom()
+    tree.draw()
+    back_trees.append(tree)
 
-        return False
-
-upButton = button((0,255,0), 70, 20,50, 50,  '+')
-downButton = button((255,0,0), 150, 20,50, 50,  '-')
-buttons = [upButton, downButton]       
-
-TREEDOWN = - 3
-TREEUP = 30
-
-visualise = True
-verbose = False
-
-total_spawned = 0
-total_died = 0
-all_gen_neck_length_counts = dict()
-all_lengths = []
-all_shortest_lengths=  []
-all_tallest_lengths = []
-all_treelengths = []
-axvlineXes = []
-SHORTEST_NECK = DEFAULT_NECK_LENGTH
-TALLEST_NECK = DEFAULT_NECK_LENGTH
-MAX_DECREASE = DEFAULT_MUTATION_AMOUNT
-MAX_INCREASE  = DEFAULT_MUTATION_AMOUNT
-CHANCE_SPAWN_NEW_GIRAFFE = DEFAULT_CHANCE_SPAWN_NEW_GIRAFFE
-MAX_ALLOWED_GIRAFFES= DEFAULT_MAX_ALLOWED_GIRAFFES
-
+# herd of giraffes
 giraffes = []
 for i in range(DEFAULT_GIRAFFE_START_AMOUNT):
     giraffeboy = Giraffe()
     giraffeboy.draw()
     giraffes.append(giraffeboy)
-    print(giraffeboy.x, giraffeboy.y)
     
     total_spawned += 1
 
+# foreground trees
+fore_trees = []
+for i in range(6):
+    tree = Boom()
+    tree.draw()
+    fore_trees.append(tree)
 
-Game = True
-generation = 0
-population_size_per_generation = []
-
-tree_length = DEFAULT_TREE_LENGTH # DO THIS FOR EVERYTHING
-
-bob = Boom(420)
-job = Boom(-350)
-
+# buttons
+upButton = button((0,255,0), 70, 20,50, 50,  '+')
+downButton = button((255,0,0), 150, 20,50, 50,  '-')
 
 
 #  ██████╗  █████╗ ███╗   ███╗███████╗    ██╗      ██████╗  ██████╗ ██████╗ 
@@ -340,7 +379,7 @@ job = Boom(-350)
 # ██║  ███╗███████║██╔████╔██║█████╗      ██║     ██║   ██║██║   ██║██████╔╝
 # ██║   ██║██╔══██║██║╚██╔╝██║██╔══╝      ██║     ██║   ██║██║   ██║██╔═══╝ 
 # ╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗    ███████╗╚██████╔╝╚██████╔╝██║     
-#  ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝    ╚══════╝ ╚═════╝  ╚═════╝ ╚═╝     
+#  ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝    ╚══════╝ ╚═════╝  ╚═════╝ ╚═╝  (start)    
 
                                                                            
 print("GAME STARTS!","there are", len(giraffes))
@@ -355,31 +394,38 @@ while len(giraffes) > 0:
             if upButton.isOver(pos):
                 tree_length += 50
 
+
             if downButton.isOver(pos):
                 tree_length -= 50
             
     
 
-#  ██████╗  █████╗ ███╗   ███╗███████╗    ██╗      ██████╗  ██████╗ ██████╗ 
-# ██╔════╝ ██╔══██╗████╗ ████║██╔════╝    ██║     ██╔═══██╗██╔═══██╗██╔══██╗
-# ██║  ███╗███████║██╔████╔██║█████╗      ██║     ██║   ██║██║   ██║██████╔╝
-# ██║   ██║██╔══██║██║╚██╔╝██║██╔══╝      ██║     ██║   ██║██║   ██║██╔═══╝ 
-# ╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗    ███████╗╚██████╔╝╚██████╔╝██║     
-#  ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝    ╚══════╝ ╚═════╝  ╚═════╝ ╚═╝     
+#  ██████╗  █████╗ ███╗   ███╗ ███████╗    ██╗      ██████╗  ██████╗  ██████╗ 
+# ██╔════╝ ██╔══██╗████╗ ████║ ██╔════╝    ██║     ██╔═══██╗██╔═══██╗ ██╔══██╗
+# ██║  ███╗███████║██╔████╔██║ █████╗      ██║     ██║   ██║██║   ██║ ██████╔╝
+# ██║   ██║██╔══██║██║╚██╔╝██║ ██╔══╝      ██║     ██║   ██║██║   ██║ ██╔═══╝ 
+# ╚██████╔╝██║  ██║██║ ╚═╝ ██║ ███████╗    ███████╗╚██████╔╝╚██████╔╝ ██║     
+#  ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝ ╚══════╝    ╚══════╝ ╚═════╝  ╚═════╝  ╚═╝     
 # ----------------------------------------------------------------------------
 # one full 'loop' equals one 'generation'
 # every generation, an inner loop represents time (hunger drains every so often)
 #
 #
 #
-    for time_unit in range(60):
-
+    
+    for time_unit in range(HUNGER_DRAIN_TICKS*10):
+        tree_items = [min(all_treelengths), max(all_treelengths), tree_length]
+ 
         # background first
         if visualise:
             surface.blit(background,(0,0))
+            for tree in back_trees:
+                tree.update(tree_items)
+                tree.draw()
 
         # eat every 10 ticks
         if time_unit % 10 == 0:
+
             for g_index in range(len(giraffes)):
                 giraffe = giraffes[g_index]
                 giraffe.drain_hunger()
@@ -401,6 +447,9 @@ while len(giraffes) > 0:
             # foreground (trees)
             bob.draw()
             job.draw()
+            for tree in fore_trees:
+                tree.update(tree_items)
+                tree.draw()
 
 
             # draw GUI elements (buttons)
@@ -465,7 +514,7 @@ while len(giraffes) > 0:
 
 
     # NEW GENERATION SPAWNING
-    giraffes, spawned = spawnGeneration(giraffes, SHORTEST_NECK, TALLEST_NECK)
+    giraffes, spawned = spawnGeneration(giraffes, 600, 1900)
     total_spawned += spawned
 
 
@@ -492,7 +541,12 @@ surface.blit(game_end_text_1,((x/2)-60,y/2))
 surface.blit(game_end_text_2,((x/2)-60,y/2+30))
 win.update()
 
+
+#  -----------------------------------------------------------------------------
+
+
 # end whileloop
+# some log prints
 print("In generation",generation,"all giraffes are dead")
 print_neck_lengths(all_gen_neck_length_counts)
 print("tallest:",max(all_gen_neck_length_counts))
@@ -501,24 +555,29 @@ print("most occuring population:")
 print(highest_frequency(population_size_per_generation))
 pygame.quit()
 
+# some log prints
 
 print(all_lengths[:10],all_shortest_lengths[:10],
       all_tallest_lengths[:10])
 
+
+# pre graph calculations
 average = np.average(all_lengths)
 mean =  np.mean(all_lengths)
 
-
-plt.plot(all_lengths, 'r--')
-plt.plot(all_shortest_lengths, 'bs')
-plt.plot(all_tallest_lengths, 'g^')
-plt.plot(all_treelengths, 'brown')
-for tup in zip([average, mean], ['black','grey']):
+# graphs
+plt.plot(all_lengths, 'r--',label='length per generation')
+plt.plot(all_shortest_lengths, 'bs', label='shortest giraffe in generation')
+plt.plot(all_tallest_lengths, 'g^', label='tallest giraffe in generation')
+plt.plot(all_treelengths, 'brown', label='tree length')
+for tup in zip([average, mean], ['black','grey'], ['average', 'mean']):
     print(tup[0], tup[1])
-    plt.hlines(tup[0],0,len(all_lengths), tup[1])
+    plt.hlines(tup[0],0,len(all_lengths), tup[1], label=tup[2])
 
 for axvline in  axvlineXes:
     plt.axvline(axvline, color='pink')
+plt.axvline(axvline, color='pink', label='generation')
     
 plt.style.use('fivethirtyeight')
+plt.legend(loc='upper left')
 plt.show()
