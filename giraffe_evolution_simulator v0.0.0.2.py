@@ -37,6 +37,7 @@ FACTOR = 5 #int
 FPS = 30
 GLOB_STEPSIZE = 5
 clock = pygame.time.Clock()
+PIXELS_ONDERGROND = 300
 
 EASTER_EGG1 = False
 win = pygame.display
@@ -52,9 +53,9 @@ window = True
 DEFAULT_TREE_LENGTH = 1000
 
 # Population
-DEFAULT_GIRAFFE_START_AMOUNT = 250
-DEFAULT_MAX_ALLOWED_GIRAFFES = 1000
-DEFAULT_CHANCE_SPAWN_NEW_GIRAFFE = 25 # 1/33 deprecated
+DEFAULT_GIRAFFE_START_AMOUNT = 75
+DEFAULT_MAX_ALLOWED_GIRAFFES = 100
+DEFAULT_CHANCE_SPAWN_NEW_GIRAFFE = 25 # 1/33
 DEFAULT_MUTATION_AMOUNT = 5
 
 
@@ -70,15 +71,15 @@ class Giraffe():
         size = self.image.get_size()
         width, length = size[0],size[1]
         new_w, new_l = width*FACTOR, length*FACTOR
-        self.y = y - new_l       
+        self.y = y - new_l - PIXELS_ONDERGROND
         self.image = pygame.transform.scale(self.image, (new_w, new_l))
-             
+
         self.hunger = MAX_HUNGER
         self.dead = False
-        
+
 
     def eat(self, tree_length):
-        
+
         if self.can_eat(tree_length):
             if self.hunger < MAX_HUNGER+1:
                 self.hunger += 1
@@ -99,7 +100,7 @@ class Giraffe():
         within_min = difference > -EAT_RANGE
         can_eat = within_max and within_min
         return can_eat
-        
+
     def isDead(self):
         return self.dead
 
@@ -108,17 +109,17 @@ class Giraffe():
 
     def walk(self):
 
-           
-        distance = randint(0, 20)
+
+        distance = randint(0, 100)
         negative = bool(randint(0,1))
-        
+
         for i in range(distance):
             if not negative:
                 self.x += 3
             else:
                 self.x -= 3
             #self.y = self.y + randint(-5, 5)
-            # reset if giraffe out of boundaries 
+            # reset if giraffe out of boundaries
             if self.x < 0:
                 self.x = x/3
             if self.x > x:
@@ -135,16 +136,16 @@ class Boom():
         width, length = size[0],size[1]
         new_w, new_l = width*FACTOR, length*FACTOR
         self.x = (x/2) - (new_w/2) + offset
-              
-        
-        self.y = 1020 - new_l
+
+
+        self.y = y - new_l - PIXELS_ONDERGROND
         self.image = pygame.transform.scale(self.image, (new_w, new_l))
 
     def draw(self):
         surface.blit(self.image,(self.x,self.y))
-        
 
-    
+
+
 def normalise(l, r):
     # how many times does the smallest thing fit all the other things?
     minim, maxim = min(l), max(l)
@@ -156,7 +157,7 @@ def normalise(l, r):
         result.append( round(((i - minim)/(devider))*r))
 
     return result
-    
+
 def add_to_dict(original_dict, dict_to_add):
     """assumes values of both dicts are integers and
        can be added together, then adds them to the first
@@ -167,7 +168,7 @@ def add_to_dict(original_dict, dict_to_add):
             original_dict[key] = value
         else:
             original_dict[key] += value
-            
+
 def spawnGeneration(giraffes, SHORTEST_NECK, TALLEST_NECK):
     new_gen = []
     spawned = 0
@@ -176,7 +177,7 @@ def spawnGeneration(giraffes, SHORTEST_NECK, TALLEST_NECK):
         mutation = randint(MAX_DECREASE,MAX_INCREASE)
         new_length = old_length + mutation
         giraffe_image = normalise([SHORTEST_NECK, new_length, TALLEST_NECK],10)[1]
-        
+
         new_giraffe = Giraffe(new_length, giraffe_image)
         new_gen.append(new_giraffe)
         spawned += 1
@@ -191,7 +192,7 @@ def spawnGeneration(giraffes, SHORTEST_NECK, TALLEST_NECK):
             break
 
     return new_gen, spawned
-        
+
 def print_dict(d):
     for k, v in d.items():
         print ( k, "\t:", v )
@@ -205,7 +206,7 @@ def highest_frequency(l):
 
     highest = 0
     counts = {}
-    
+
     for i in set(l):
         frequency = l.count(i)
         counts[i] = frequency
@@ -300,60 +301,61 @@ while len(giraffes) > 0:
 
             if downButton.isOver(pos):
                 tree_length -= 50
-            
+
 
     # game loop
     for hunger_drain in range(HUNGER_DRAIN_TICKS):
-        
+
         # draw background
         if visualise:
             surface.blit(background,(0,0))
-            
+
         for g_index in range(len(giraffes)):
 
             giraffe = giraffes[g_index]
             giraffe.drain_hunger()
-            
-            
+
+
             giraffe.eat(tree_length)
 
-            giraffe.walk()
+            if visualise:
+                giraffe.walk()
+                giraffe.draw()
+                bob.draw()
+                job.draw()
+                win.update()
+                clock.tick(FPS)
 
-            # draw background items
-            # draw giraffes
-            giraffe.draw()
-
-            
             # draw foreground ( trees )
 
 
             # button events
-            
+
             # draw buttons
             for button in buttons:
                 button.draw(surface)
-        
 
-            
-            
+
+
+
         if visualise:
             win.update()
             clock.tick(FPS)
-        
-         
+
+
         dead_giraffes = [giraffe for giraffe in giraffes if giraffe.isDead()]
         for corpse in dead_giraffes:
             total_died += 1
             giraffes.remove(corpse)
 
-        
-        
-        
-    
+
+
+
+
 
     # some logging for now
     neck_lengths = [giraffe.neck_length for giraffe in giraffes]
-    
+
 
     if neck_lengths != []:
         short_one = min(neck_lengths)
@@ -375,10 +377,10 @@ while len(giraffes) > 0:
     else:
         TREEDOWN -= 5
         TREEUP += 1
-        
+
     tree_length += randint(TREEDOWN, TREEUP)
     axvlineXes.append(total_spawned-total_died)
-    
+
     print("SHORT:",SHORTEST_NECK,"TALL:",TALLEST_NECK,"TREE:",tree_length)
     current_gen_neck_length_counts = {neck_length:neck_lengths.count(neck_length) for
               neck_length in set(neck_lengths)}
@@ -386,7 +388,7 @@ while len(giraffes) > 0:
                 current_gen_neck_length_counts)
 
     # verbosity (logging prints)
-    
+
     if verbose:
         print_neck_lengths(counts)
 
@@ -398,7 +400,7 @@ while len(giraffes) > 0:
     #    - population_size_per_generation (population)
     #
 
-    
+
     #input("press enter to go to the next generation")
     print("there are",len(giraffes),"in generation",generation)
     population_size_per_generation.append(len(giraffes))
@@ -450,6 +452,6 @@ for tup in zip([average, mean], ['black','grey']):
 
 for axvline in  axvlineXes:
     plt.axvline(axvline, color='pink')
-    
+
 plt.style.use('fivethirtyeight')
 plt.show()
