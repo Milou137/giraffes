@@ -1,4 +1,3 @@
-
 from random import randint
 import pygame
 import time
@@ -8,8 +7,8 @@ pygame.init()
 
 white = (255,255,255)
 
-x = 600
-y = 800
+x = 1280
+y = 1024
 z = [x,y]
 
 FPS = 30
@@ -22,8 +21,9 @@ win = pygame.display
 win.set_caption("My pygame window meme")
 
 surface = win.set_mode(z)
-giraffe_1_img = pygame.transform.scale(pygame.image.load('images/giraffe_1.png').convert_alpha(), (100, 100))
-background = pygame.image.load('images/background.png')
+giraffe_1_img = pygame.transform.scale(pygame.image.load('images/giraffe_1.png'), (2000,2000))
+background = pygame.transform.scale(pygame.image.load('images/background.png'), (1280, 1024))
+boom = pygame.image.load('images/boom_0.png')
 window = True
 
 
@@ -50,19 +50,12 @@ class Memes():
         for i in range(12):
             self.memes.append(Meme())
 
-    def growSome(self):
-
-        for meme in self.memes:
-
-            # random
-            if bool(randint(0,1)):
-                meme.grow(randint(-5,10))
             
 class Meme():
     def __init__(self):
         self.x = 0
         self.y = randint(550, 580)
-        self.image = pygame.transform.scale(pygame.image.load('images/giraffe_1.png').convert_alpha(), (100, 100))
+        self.image = pygame.transform.scale(pygame.image.load('images/giraffe_1.png'), (200,200))
 
     def getpos(self):
         return self.x, self.y
@@ -93,18 +86,6 @@ class Meme():
     def draw(self):
         surface.blit(self.image,(self.x,self.y))
 
-    def grow(self, amt):
-        if self.image.get_size()[1] < 250:
-            size = self.image.get_size()
-            width, length = size[0], size[1]
-            if not EASTER_EGG1:
-                self.image = pygame.transform.scale(self.image,(width,length+amt))
-                self.y -= amt
-            else:
-                self.image = pygame.transform.rotozoom(self.image, randint(0,360),1)
-
-
-
 
 
 m = Memes()
@@ -123,7 +104,6 @@ while window:
     
     m.walkAll()
     m.drawAll()
-    m.growSome()
 
 
     # update (render) the screen (?)
