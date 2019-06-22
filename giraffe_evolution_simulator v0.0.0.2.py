@@ -66,7 +66,7 @@ window = True
 
 # Trees
 DEFAULT_TREE_LENGTH = 1000
-
+tree_length = DEFAULT_TREE_LENGTH
 # Population
 DEFAULT_GIRAFFE_START_AMOUNT = 5
 DEFAULT_MAX_ALLOWED_GIRAFFES = 10
@@ -164,21 +164,21 @@ class Giraffe():
    ██║   ██║  ██║███████╗███████╗
    ╚═╝   ╚═╝  ╚═╝╚══════╝╚══════╝"""                              
 class Boom():
-    def __init__(self, offset=0):
-        self.image = pygame.image.load('images/boom_0.png')
+    def __init__(self, offset=0, minBOOM=tree_length/2,maxBOOM=tree_length*2):
+
+        global tree_length
+        boom_image_num = normalise([minBOOM, new_length, maxBOOM],10)[1]
+        imagepath = "images/boom_"+str(boom_image_num)+".png" # > 0 < MAXRANGE
+        self.image = pygame.image.load(imagepath).convert_alpha()
         size = self.image.get_size()
         width, length = size[0],size[1]
         new_w, new_l = width*FACTOR, length*FACTOR
         self.x = (x/2) - (new_w/2) + offset
-              
-        
         self.y = y - new_l - PIXELS_ONDERGROND
         self.image = pygame.transform.scale(self.image, (new_w, new_l))
 
     def draw(self):
         surface.blit(self.image,(self.x,self.y))
-        
-
     
 def normalise(l, r):
     # how many times does the smallest thing fit all the other things?
