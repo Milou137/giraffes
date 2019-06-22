@@ -3,24 +3,19 @@ base of a game
 
 # game loop
 ### start
-10 giraffen en 3 bomen spawnen, beide lengte 1. De giraffen lopen randomly (heb ik dit goed gelezen?)
-hongerbar van giraffen begint op 5
+Een aantal giraffen spawnen met een hungerbar van 
 ### user
-De user kan met knopjes de boel beïnvloeden, waarna er observaties gemaakt kunnen worden. (wellicht ook een timer die aangezet kan worden om dit random te doen of met een certain bias bijv Random(-2, 5) oid)
+de user kan de boomlengte vergroten en verkleinen
 
 ### timer
-Voor elke 2 giraffes komen er elke "tijdseenheid" (nu minuut) 2 tot 5 nieuwe giraffen bij. De oudere generatie verdwijnt. (en de nieuew generatie zijn nog in "baby" fase? misschien een leeftijd systeem (bar), 0-6 ofzo waar ze van 2-4 kunnen voortplanten)
+elke generatie gaan de giraffen uit de vorige generatie weg en komen er voor elke giraf een nieuwe giraf terug met een kans om een extra kans om 2 giraffen te spawnen. Deze giraffen krijgen de neklengte van hun voorganger mee met een gerandomiseerde waarde erbij of eraf.
 
 giraffen  verliezen 1 honger per minuut 
-
 giraffen kunnen alleen eten als hun neklengte binnen het bereik van de boom is
-
 bomen gaan niet op
 
 ### neklengte
- de lengte van de nek van een babygiraffe wordt bepaald door de gezamenlijke lengte van de nekken van zijn/haar ouders, +/- 3. Dit wordt per baby bepaalt, neem ik aan?
- Dus 2 ouders kunnen 5 verschillende baby's krijgen, bijv (-3, -2, 0, -1, 2)
-
+de neklengte wordt bepaald door de neklengte van de ouder te nemen en daar een waarde bijop of af te halen
 
 
 ### loop
