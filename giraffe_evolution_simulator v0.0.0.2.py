@@ -29,10 +29,11 @@ pygame.init()
 
 white = (255,255,255)
 
-x = 600
-y = 800
+x = 1500
+y = 1024
 z = [x,y]
 
+FACTOR = 5 #int
 FPS = 30
 GLOB_STEPSIZE = 5
 clock = pygame.time.Clock()
@@ -43,8 +44,7 @@ win = pygame.display
 win.set_caption("My pygame window meme")
 
 surface = win.set_mode(z)
-giraffe_1_img = pygame.transform.scale(pygame.image.load('images/running_giraffe.png').convert_alpha(), (100, 100))
-background = pygame.image.load('images/giraffe-herd-in-savannah.png')
+background = pygame.transform.scale(pygame.image.load('images/background.png'), (z))
 window = True
 
 
@@ -62,17 +62,19 @@ class Giraffe():
 
     def __init__(self, neck_length = DEFAULT_NECK_LENGTH, image=0):
 
-        self.neck_length = randint(neck_length-EAT_RANGE,
-                                   neck_length+EAT_RANGE)
-        
-        self.x = randint(0,x)
-        self.y = randint(550, 580)
-        
+        self.x = 0
         imagepath = "images/giraffe_"+str(image)+".png" # > 0 < MAXRANGE
         self.image = pygame.image.load(imagepath).convert_alpha()
+        self.neck_length = randint(neck_length-EAT_RANGE,
+                                   neck_length+EAT_RANGE)
+        size = self.image.get_size()
+        width, length = size[0],size[1]
+        new_w, new_l = width*FACTOR, length*FACTOR
+        self.y = 1020 - new_l       
+        self.image = pygame.transform.scale(self.image, (new_w, new_l))
+             
         self.hunger = MAX_HUNGER
         self.dead = False
-        
         
 
     def eat(self, tree_length):
@@ -126,6 +128,21 @@ class Giraffe():
             if self.y > y:
                 self.y = (y/2)
 
+class Boom():
+    def __init__(self, offset=0):
+        self.image = pygame.image.load('images/boom_0.png')
+        size = self.image.get_size()
+        width, length = size[0],size[1]
+        new_w, new_l = width*FACTOR, length*FACTOR
+        self.x = (x/2) - (new_w/2) + offset
+              
+        
+        self.y = 1020 - new_l
+        self.image = pygame.transform.scale(self.image, (new_w, new_l))
+
+    def draw(self):
+        surface.blit(self.image,(self.x,self.y))
+        
 
     
 def normalise(l, r):
@@ -230,6 +247,8 @@ population_size_per_generation = []
 
 tree_length = DEFAULT_TREE_LENGTH # DO THIS FOR EVERYTHING
 
+bob = Boom(420)
+job = Boom(-350)
 
 print("GAME STARTS!","there are", len(giraffes))
 while len(giraffes) > 0:
