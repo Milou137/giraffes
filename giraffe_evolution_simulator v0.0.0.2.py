@@ -7,6 +7,7 @@
 # imports
 from random import randint
 import matplotlib.pyplot as plt
+import numpy as np
 import matplotlib.animation as animation
 from matplotlib import style
 import time
@@ -17,7 +18,7 @@ style.use("fivethirtyeight")
 
 
 # Giraffes
-EAT_RANGE = 200
+EAT_RANGE = 75
 MAX_HUNGER = 5
 HUNGER_DRAIN_TICKS = 5
 DEFAULT_NECK_LENGTH = 1000
@@ -33,7 +34,7 @@ y = 800
 z = [x,y]
 
 FPS = 30
-GLOB_STEPSIZE = 0.6
+GLOB_STEPSIZE = 5
 clock = pygame.time.Clock()
 
 EASTER_EGG1 = False
@@ -150,6 +151,30 @@ def add_to_dict(original_dict, dict_to_add):
         else:
             original_dict[key] += value
             
+def spawnGeneration(giraffes, SHORTEST_NECK, TALLEST_NECK):
+    new_gen = []
+    spawned = 0
+    for giraffe in giraffes:
+        old_length = giraffe.neck_length
+        mutation = randint(MAX_DECREASE,MAX_INCREASE)
+        new_length = old_length + mutation
+        giraffe_image = normalise([SHORTEST_NECK, new_length, TALLEST_NECK],10)[1]
+        
+        new_giraffe = Giraffe(new_length, giraffe_image)
+        new_gen.append(new_giraffe)
+        spawned += 1
+
+        # twin
+        if len(giraffes) < MAX_ALLOWED_GIRAFFES:
+            if not bool(randint(0,CHANCE_SPAWN_NEW_GIRAFFE)):
+                new_giraffe = Giraffe(new_length, giraffe_image)
+                new_gen.append(new_giraffe)
+                spawned += 1
+        else:
+            break
+
+    return new_gen, spawned
+        
 def print_dict(d):
     for k, v in d.items():
         print ( k, "\t:", v )
@@ -180,7 +205,12 @@ def highest_frequency(l):
 verbose = False
 
 total_spawned = 0
+total_died = 0
 all_gen_neck_length_counts = dict()
+all_lengths = []
+all_shortest_lengths=  []
+all_tallest_lengths = []
+axvlineXes = []
 SHORTEST_NECK = DEFAULT_NECK_LENGTH
 TALLEST_NECK = DEFAULT_NECK_LENGTH
 MAX_DECREASE = DEFAULT_MUTATION_AMOUNT
@@ -207,22 +237,27 @@ while len(giraffes) > 0:
         if event.type == pygame.QUIT:
             window = False
 
-    # draw background
-    surface.blit(background,(0,0))
     
+
+    # game loop
     for hunger_drain in range(HUNGER_DRAIN_TICKS):
+        # draw background
+        surface.blit(background,(0,0))
         for g_index in range(len(giraffes)):
 
             giraffe = giraffes[g_index]
             giraffe.drain_hunger()
-            giraffe.walk()
+            
+            
             giraffe.eat(tree_length)
+            giraffe.walk()
             giraffe.draw() 
             win.update()
             
          
         dead_giraffes = [giraffe for giraffe in giraffes if giraffe.isDead()]
         for corpse in dead_giraffes:
+            total_died += 1
             giraffes.remove(corpse)
 
         
@@ -231,6 +266,7 @@ while len(giraffes) > 0:
 
     # some logging for now
     neck_lengths = [giraffe.neck_length for giraffe in giraffes]
+    
 
     if neck_lengths != []:
         short_one = min(neck_lengths)
@@ -239,7 +275,14 @@ while len(giraffes) > 0:
             SHORTEST_NECK = short_one
         if tall_one > TALLEST_NECK:
             TALLEST_NECK = tall_one
-        
+
+    all_lengths = all_lengths + neck_lengths
+    for l in neck_lengths:
+        all_shortest_lengths.append(short_one)
+        all_tallest_lengths.append(tall_one)
+
+    axvlineXes.append(total_spawned-total_died)
+    
     print("SHORT:",SHORTEST_NECK,"TALL:",TALLEST_NECK)
     current_gen_neck_length_counts = {neck_length:neck_lengths.count(neck_length) for
               neck_length in set(neck_lengths)}
@@ -267,32 +310,12 @@ while len(giraffes) > 0:
 
 
     # NEW GENERATION SPAWNING
-    new_gen = []
-    for giraffe in giraffes:
-        old_length = giraffe.neck_length
-        mutation = randint(MAX_DECREASE,MAX_INCREASE)
-        new_length = old_length + mutation
-        giraffe_image = normalise([SHORTEST_NECK, new_length, TALLEST_NECK],10)[1]
-        
-        new_giraffe = Giraffe(new_length, giraffe_image)
-        new_gen.append(new_giraffe)
-        total_spawned += 1
-
-        # twin
-        if len(giraffes) < MAX_ALLOWED_GIRAFFES:
-            if not bool(randint(0,CHANCE_SPAWN_NEW_GIRAFFE)):
-                new_giraffe = Giraffe(new_length, giraffe_image)
-                new_gen.append(new_giraffe)
-                total_spawned += 1
-        else:
-            break
-
-        
-
-    giraffes = new_gen
+    giraffes, spawned = spawnGeneration(giraffes, SHORTEST_NECK, TALLEST_NECK)
+    total_spawned += spawned
 
 
-
+# end state ( diagrams, popuptext, idfk)
+surface.blit(background,(0,0))
 
 # end whileloop
 print("In generation",generation,"all giraffes are dead")
@@ -303,3 +326,22 @@ print("most occuring population:")
 print(highest_frequency(population_size_per_generation))
 pygame.quit()
 
+
+print(all_lengths[:10],all_shortest_lengths[:10],
+      all_tallest_lengths[:10])
+
+average = np.average(all_lengths)
+mean =  np.mean(all_lengths)
+
+
+plt.plot(all_lengths, 'r--')
+plt.plot(all_shortest_lengths, 'bs')
+plt.plot(all_tallest_lengths, 'g^')
+for tup in zip([average, mean], ['black','grey']):
+    print(tup[0], tup[1])
+    plt.hlines(tup[0],0,len(all_lengths), tup[1])
+
+for axvline in  axvlineXes:
+    plt.axvline(axvline, color='pink')
+    
+plt.show()
