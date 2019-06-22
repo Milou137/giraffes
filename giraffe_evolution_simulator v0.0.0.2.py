@@ -29,8 +29,8 @@ pygame.init()
 
 white = (255,255,255)
 
-x = 1500
-y = 1024
+x = 640
+y = 800
 z = [x,y]
 
 FACTOR = 5 #int
@@ -52,9 +52,9 @@ window = True
 DEFAULT_TREE_LENGTH = 1000
 
 # Population
-DEFAULT_GIRAFFE_START_AMOUNT = 100
-DEFAULT_MAX_ALLOWED_GIRAFFES = 500
-DEFAULT_CHANCE_SPAWN_NEW_GIRAFFE = 25 # 1/33
+DEFAULT_GIRAFFE_START_AMOUNT = 250
+DEFAULT_MAX_ALLOWED_GIRAFFES = 1000
+DEFAULT_CHANCE_SPAWN_NEW_GIRAFFE = 25 # 1/33 deprecated
 DEFAULT_MUTATION_AMOUNT = 5
 
 
@@ -62,7 +62,7 @@ class Giraffe():
 
     def __init__(self, neck_length = DEFAULT_NECK_LENGTH, image=0):
 
-        self.x = 0
+        self.x = randint(5,x-5)
         imagepath = "images/giraffe_"+str(image)+".png" # > 0 < MAXRANGE
         self.image = pygame.image.load(imagepath).convert_alpha()
         self.neck_length = randint(neck_length-EAT_RANGE,
@@ -70,7 +70,7 @@ class Giraffe():
         size = self.image.get_size()
         width, length = size[0],size[1]
         new_w, new_l = width*FACTOR, length*FACTOR
-        self.y = 1020 - new_l       
+        self.y = y - new_l       
         self.image = pygame.transform.scale(self.image, (new_w, new_l))
              
         self.hunger = MAX_HUNGER
@@ -114,13 +114,13 @@ class Giraffe():
         
         for i in range(distance):
             if not negative:
-                self.x += GLOB_STEPSIZE
+                self.x += 3
             else:
-                self.x -= GLOB_STEPSIZE
+                self.x -= 3
             #self.y = self.y + randint(-5, 5)
             # reset if giraffe out of boundaries 
             if self.x < 0:
-                self.x = 1
+                self.x = x/3
             if self.x > x:
                 self.x = (x/3)
             if self.y < 0:
@@ -215,12 +215,45 @@ def highest_frequency(l):
     # sorted_x = sorted(x.items(), key=lambda kv: kv[1]) <- for later
     # if we want to return like a top-3 or something. h.
     return "Most occuring item was %s with a frequency of %s " %(item,highest)
-        
+
+class button():
+    def __init__(self, color, x, y, width, height, text=''):
+        self.color = color
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.text = text
+
+    def draw(self, win, outline=None):
+        # Call this method to draw the button on the screen
+        if outline:
+            pygame.draw.rect(win, outline, (self.x - 2, self.y - 2, self.width + 4, self.height + 4), 0)
+
+        pygame.draw.rect(win, self.color, (self.x, self.y, self.width, self.height), 0)
+
+        if self.text != '':
+            font = pygame.font.SysFont('comicsans', 60)
+            text = font.render(self.text, 1, (0, 0, 0))
+            win.blit(text, (
+            self.x + (self.width / 2 - text.get_width() / 2), self.y + (self.height / 2 - text.get_height() / 2)))
+
+    def isOver(self, pos):
+        # Pos is the mouse position or a tuple of (x,y) coordinates
+        if pos[0] > self.x and pos[0] < self.x + self.width:
+            if pos[1] > self.y and pos[1] < self.y + self.height:
+                return True
+
+        return False
+
+upButton = button((0,255,0), 70, 20,50, 50,  '+')
+downButton = button((255,0,0), 150, 20,50, 50,  '-')
+buttons = [upButton, downButton]
 
 TREEDOWN = - 3
-TREEUP = 15
+TREEUP = 45
 
-visualise = False
+visualise = True
 verbose = False
 
 total_spawned = 0
@@ -253,19 +286,29 @@ tree_length = DEFAULT_TREE_LENGTH # DO THIS FOR EVERYTHING
 bob = Boom(420)
 job = Boom(-350)
 
+
 print("GAME STARTS!","there are", len(giraffes))
 while len(giraffes) > 0:
     for event in pygame.event.get():
+        pos = pygame.mouse.get_pos()
         if event.type == pygame.QUIT:
             window = False
 
-    
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            if upButton.isOver(pos):
+                tree_length += 50
+
+            if downButton.isOver(pos):
+                tree_length -= 50
+            
 
     # game loop
     for hunger_drain in range(HUNGER_DRAIN_TICKS):
+        
         # draw background
         if visualise:
             surface.blit(background,(0,0))
+            
         for g_index in range(len(giraffes)):
 
             giraffe = giraffes[g_index]
@@ -274,12 +317,29 @@ while len(giraffes) > 0:
             
             giraffe.eat(tree_length)
 
-            if visualise:
-                giraffe.walk()
-                giraffe.draw() 
-                win.update()
-                clock.tick(FPS)
+            giraffe.walk()
+
+            # draw background items
+            # draw giraffes
+            giraffe.draw()
+
             
+            # draw foreground ( trees )
+
+
+            # button events
+            
+            # draw buttons
+            for button in buttons:
+                button.draw(surface)
+        
+
+            
+            
+        if visualise:
+            win.update()
+            clock.tick(FPS)
+        
          
         dead_giraffes = [giraffe for giraffe in giraffes if giraffe.isDead()]
         for corpse in dead_giraffes:
@@ -289,7 +349,7 @@ while len(giraffes) > 0:
         
         
         
-
+    
 
     # some logging for now
     neck_lengths = [giraffe.neck_length for giraffe in giraffes]
@@ -308,11 +368,18 @@ while len(giraffes) > 0:
         all_shortest_lengths.append(short_one)
         all_tallest_lengths.append(tall_one)
         all_treelengths.append(tree_length)
+
+    if randint(0, generation) > generation/3:
+        TREEDOWN -= 1
+        TREEUP -= 5
+    else:
+        TREEDOWN -= 5
+        TREEUP += 1
         
     tree_length += randint(TREEDOWN, TREEUP)
     axvlineXes.append(total_spawned-total_died)
     
-    print("SHORT:",SHORTEST_NECK,"TALL:",TALLEST_NECK)
+    print("SHORT:",SHORTEST_NECK,"TALL:",TALLEST_NECK,"TREE:",tree_length)
     current_gen_neck_length_counts = {neck_length:neck_lengths.count(neck_length) for
               neck_length in set(neck_lengths)}
     add_to_dict(all_gen_neck_length_counts,
@@ -343,8 +410,18 @@ while len(giraffes) > 0:
     total_spawned += spawned
 
 
+
 # end state ( diagrams, popuptext, idfk)
+# from https://stackoverflow.com/questions/20842801/how-to-display-text-in-pygame
+pygame.font.init()
+myfont =  pygame.font.SysFont('Comic Sans MS', 30)
+game_end_text_1 = myfont.render('Endu Of Gamu', False, (0, 0, 0))
+game_end_text_2 = myfont.render('generation: '+str(generation), False, (0, 0, 0))
+
 surface.blit(background,(0,0))
+surface.blit(game_end_text_1,((x/2)-60,y/2))
+surface.blit(game_end_text_2,((x/2)-60,y/2+30))
+win.update()
 
 # end whileloop
 print("In generation",generation,"all giraffes are dead")
